@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { TrackInstance } from './track.model';
-import { getTracks } from 'src/database/db';
 
 @Injectable()
 export class TrackService {
-    private Tracks: TrackInstance[] = getTracks();
+    private Tracks: TrackInstance[] = [];
 
     insertTrack(name: string, artistId: string | null, albumId: string | null, duration: number,): TrackInstance {
       const TrackId = uuidv4();
