@@ -1,3 +1,4 @@
+import { type } from "os";
 import { Album } from "src/album/album.models";
 import { Artist } from "src/artist/artist.models";
 import { Track } from "src/track/track.model";
@@ -8,5 +9,11 @@ export type DataBase = {
     albums: Array<Album>,
     tracks: Track[],
     artists: Artist[],
+    favorites: Favorites,
 }
 
+export type Favorites = {
+    artists: string[];
+    albums: string[];
+    tracks: string[];
+}
