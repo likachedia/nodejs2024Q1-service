@@ -444,7 +444,7 @@ describe('Favorites (e2e)', () => {
         .set(commonHeaders);
 
       expect(response.status).toBe(StatusCodes.OK);
-        console.log( response.body)
+      
       const trackSearchResult = response.body.tracks.find(
         (track) => track.id === trackId,
       );
