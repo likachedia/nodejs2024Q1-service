@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ArtistInstance } from './artist.models';
 import { v4 as uuidv4 } from 'uuid';
+import { getArtists } from 'src/database/db';
+import { removeArtistId } from 'src/utils/utils';
 
 @Injectable()
 export class ArtistService {
-    private Artists: ArtistInstance[] = [];
+    private Artists: ArtistInstance[] = getArtists();
 
     insertArtist(name: string, grammy: boolean): ArtistInstance {
       const ArtistId = uuidv4();
@@ -31,7 +33,8 @@ export class ArtistService {
   
     deleteArtist(artistId: string) {
         const index = this.findArtist(artistId)[1];
-        this.Artists.splice(index, 1);
+        removeArtistId(artistId);
+        this.Artists.splice(index, 1);        
     }
   
     private findArtist(id: string): [ArtistInstance, number] {

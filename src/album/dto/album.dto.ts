@@ -9,7 +9,9 @@ export class CreateAlbumDto {
     @IsNumber()
     year: number;
 
-    artistId: string | null
+    @IsString()
+    @ValidateIf((object, value) => value !== null)
+    artistId: string | null;
 }
 
 export class UpdateAlbumDto {
