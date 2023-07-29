@@ -29,13 +29,13 @@ export class ArtistService {
       return updatedArtist;
     }
   
-    deleteArtist(prodId: string) {
-        const index = this.findArtist(prodId)[1];
+    deleteArtist(artistId: string) {
+        const index = this.findArtist(artistId)[1];
         this.Artists.splice(index, 1);
     }
   
     private findArtist(id: string): [ArtistInstance, number] {
-      const ArtistIndex = this.Artists.findIndex(prod => prod.id === id);
+      const ArtistIndex = this.Artists.findIndex(artist => artist.id === id);
       const Artist = this.Artists[ArtistIndex];
       if (!Artist) {
         throw new NotFoundException('Could not find Artist.');

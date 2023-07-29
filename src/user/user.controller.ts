@@ -28,6 +28,7 @@ export class UserController {
   }
 
   @Put(':id')
+  @HttpCode(200)
   updateUser(
     @Param('id', ParseUUIDPipe) userId: string,
     @Body()

@@ -31,9 +31,9 @@ export class ArtistController {
   updateArtist(
     @Param('id', ParseUUIDPipe) artistId: string,
     @Body()
-    updatePassword: CreateArtistDto
+    updateArtist: CreateArtistDto
   ) {
-    return this.artistService.updateArtist(artistId, updatePassword.name, updatePassword.grammy);
+    return this.artistService.updateArtist(artistId, updateArtist.name, updateArtist.grammy);
   }
 
   @Delete(':id')
