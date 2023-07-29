@@ -1,4 +1,5 @@
 import { Album } from "src/album/album.models";
+import { Artist } from "src/artist/artist.models";
 import { getAlbums, getTracks } from "src/database/db";
 import { Track } from "src/track/track.model";
 
@@ -50,3 +51,7 @@ export const removeAlbumId = (id:string) => {
     }
 
 }
+
+export const getItemById = (id: string, item: Array<Track | Artist | Album>) => item.find(album => album.id == id);
+
+export const validateItemExists = (id: string, items: Array<Track | Artist | Album>) => items.find(item => item.id == id);
