@@ -24,7 +24,7 @@ export class UserService {
       return { ...res };
     }
   
-    updateUser(UserId: string, oldPassword: string, newPassword: string) {
+    updateUser(UserId: string, oldPassword: string, newPassword: string):Omit<UserInstance, 'password'>  {
       const [User, index] = this.findUser(UserId);
       if (oldPassword !== User.password) {
         throw new HttpException('Password is incorrect', 403)
@@ -37,6 +37,8 @@ export class UserService {
     //     throw new HttpException('', 404)
     //   }
       this.Users[index] = updatedUser;
+      const {password, ...res} = updatedUser;
+      return { ...res };
     }
   
     deleteUser(prodId: string) {
