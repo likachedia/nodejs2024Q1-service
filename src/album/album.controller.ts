@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Pu
 import { CreateAlbumDto } from "./dto/album.dto";
 import { AlbumService } from "./album.service";
 
-@Controller('Album')
+@Controller('album')
 export class AlbumController {
     constructor(private readonly albumService: AlbumService) {}
 
