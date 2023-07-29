@@ -30,12 +30,7 @@ export class UserService {
         throw new HttpException('Password is incorrect', 403)
       }
       const updatedUser = { ...User, version: User.version + 1, updatedAt: Date.parse(new Date().toISOString())};
-
-    //   if (newPassword) {
         updatedUser.password = newPassword;
-    //   } else {
-    //     throw new HttpException('', 404)
-    //   }
       this.Users[index] = updatedUser;
       const {password, ...res} = updatedUser;
       return { ...res };
