@@ -1,11 +1,16 @@
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, IsUUID, ValidateIf } from "class-validator";
 
 export class CreateTrackDto  {
     @IsNotEmpty()
     @IsString()
     name: string;
 
+    @IsUUID()
+    @ValidateIf((object, value) => value !== null)
     artistId: string | null; // refers to Artist
+
+    @IsUUID()
+    @ValidateIf((object, value) => value !== null)
     albumId: string | null; // refers to Album
 
     @IsNotEmpty()
@@ -18,7 +23,11 @@ export class UpdateTrackDto  {
     @IsString()
     name: string;
 
+    @IsUUID()
+    @ValidateIf((object, value) => value !== null)
     artistId: string | null;
+    @IsUUID()
+    @ValidateIf((object, value) => value !== null)
     albumId: string | null;
     
     @IsNotEmpty()
