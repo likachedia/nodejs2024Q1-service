@@ -16,7 +16,15 @@ git clone {repository URL}
 ```
 npm install
 ```
+if you get the problem with installation try this command:
 
+```
+npm install --legacy-peer-deps
+```
+or this:
+```
+npm install --force
+```
 ## Running application
 
 ```
