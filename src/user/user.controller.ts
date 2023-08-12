@@ -10,10 +10,10 @@ export class UserController {
 
   
   @Post()
-  addUser(
+ async addUser(
     @Body() user: CreateUserDto
   ) {
-    const newUser = this.userService.insertUser(
+    const newUser = await this.userService.insertUser(
         user.login,
         user.password,
     );

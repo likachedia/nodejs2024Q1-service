@@ -7,7 +7,7 @@ import { removeAlbumId } from 'src/utils/utils';
 @Injectable()
 export class AlbumService {
     private Albums: AlbumInstance[] = getAlbums();
-
+    constructor(){}
     insertAlbum(name: string, year: number, artistId: string | null): AlbumInstance {
       const AlbumId = uuidv4();
       const newAlbum = new AlbumInstance(AlbumId, name, year, artistId);
