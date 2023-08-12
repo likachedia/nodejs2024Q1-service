@@ -11,7 +11,9 @@ config();
 const port = process.env.PORT || 4000;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe())
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+  }))
 
   const path = join(dirname(__dirname), "doc", "api.yaml");
   const api = load(
