@@ -3,46 +3,68 @@ import { ArtistInstance } from './artist.models';
 import { v4 as uuidv4 } from 'uuid';
 import { getArtists } from 'src/database/db';
 import { removeArtistId } from 'src/utils/utils';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ArtistService {
     private Artists: ArtistInstance[] = getArtists();
 
-    insertArtist(name: string, grammy: boolean): ArtistInstance {
-      const ArtistId = uuidv4();
-      const newArtist = new ArtistInstance(ArtistId, name, grammy);
-      this.Artists.push(newArtist);
+    constructor(private prisma: PrismaService){}
+    
+    async insertArtist(name: string, grammy: boolean): Promise<ArtistInstance> {
+      const newArtist = this.prisma.artist.create({
+        data: {
+          id: uuidv4(),
+          name: name,
+          grammy: grammy
+        }
+      })      
       return newArtist;
     }
   
-    getArtists() {
-      return [...this.Artists];
+    async getArtists(): Promise<ArtistInstance[]> {
+      const artist = await this.prisma.artist.findMany();
+      return artist;
     }
   
-    getSingleArtist(ArtistId: string): ArtistInstance {
-      const Artist = this.findArtist(ArtistId)[0];
-      return { ...Artist };
+    async getSingleArtist(ArtistId: string): Promise<ArtistInstance> {
+      const artist = await this.findArtist(ArtistId);
+      return { ...artist };
     }
   
-    updateArtist(ArtistId: string, name: string, grammy: boolean): ArtistInstance {
-      const [Artist, index] = this.findArtist(ArtistId);
-      const updatedArtist = { ...Artist, name: name, grammy: grammy};
-      this.Artists[index] = updatedArtist;
+    async updateArtist(artistId: string, name: string, grammy: boolean): Promise<ArtistInstance> {
+      const artist = this.findArtist(artistId);
+      const updatedArtist = await this.prisma.artist.update({
+        where: {
+          id: artistId
+        },
+        data: {
+          name: name,
+          grammy: grammy
+        }
+      })
       return updatedArtist;
     }
   
-    deleteArtist(artistId: string) {
-        const index = this.findArtist(artistId)[1];
+    async deleteArtist(artistId: string) {
+        const artist = await this.findArtist(artistId);
+        this.prisma.artist.delete({
+          where: {
+            id: artistId
+          }
+        })
         removeArtistId(artistId);
-        this.Artists.splice(index, 1);        
     }
   
-    private findArtist(id: string): [ArtistInstance, number] {
-      const ArtistIndex = this.Artists.findIndex(artist => artist.id === id);
-      const Artist = this.Artists[ArtistIndex];
-      if (!Artist) {
+    private async findArtist(id: string): Promise<ArtistInstance> {
+      const artist = await this.prisma.artist.findUnique({
+        where: {
+          id: id
+        }
+      });
+      if (!artist) {
         throw new NotFoundException('Could not find Artist.');
       }
-      return [Artist, ArtistIndex];
+      return artist;
     }
 }

@@ -3,46 +3,77 @@ import { v4 as uuidv4 } from 'uuid';
 import { AlbumInstance } from './album.models';
 import { getAlbums } from 'src/database/db';
 import { removeAlbumId } from 'src/utils/utils';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AlbumService {
     private Albums: AlbumInstance[] = getAlbums();
-    constructor(){}
-    insertAlbum(name: string, year: number, artistId: string | null): AlbumInstance {
-      const AlbumId = uuidv4();
-      const newAlbum = new AlbumInstance(AlbumId, name, year, artistId);
-      this.Albums.push(newAlbum);
-      return newAlbum;
+    constructor(private prisma: PrismaService){}
+
+    async insertAlbum(name: string, year: number, artistId: string | null): Promise<AlbumInstance> {
+      const artist = await this.prisma.artist.findUnique({
+        where: {
+          id: artistId
+        }
+      })
+    
+     const album = await this.prisma.album.create({
+        data: {
+          id:  uuidv4(),
+          name: name,
+          year: year,
+          artistId: artist?.id ?? null
+        }
+      })
+
+      return album;
     }
   
-    getAlbums() {
-      return [...this.Albums];
+    async getAlbums(): Promise<AlbumInstance[]> {
+      const albums = await this.prisma.album.findMany();
+      return albums;
     }
   
-    getSingleAlbum(AlbumId: string): AlbumInstance {
-      const Album = this.findAlbum(AlbumId)[0];
-      return { ...Album };
+    async getSingleAlbum(AlbumId: string): Promise<AlbumInstance> {
+      const album = await this.findAlbum(AlbumId);
+      return { ...album };
     }
   
-    updateAlbum(AlbumId: string, name: string, year: number, artistId: string | null): AlbumInstance {
-      const [Album, index] = this.findAlbum(AlbumId);
-      const updatedAlbum = { ...Album, name, year, artistId};
-      this.Albums[index] = updatedAlbum;
+    async updateAlbum(albumId: string, name: string, year: number, artistId: string | null): Promise<AlbumInstance> {
+      const album = await this.findAlbum(albumId);
+      const updatedAlbum = this.prisma.album.update({
+        where: {
+          id: albumId
+        },
+        data: {
+          name: name,
+          year: year,
+          artistId: artistId
+        }
+      })
       return updatedAlbum;
     }
   
-    deleteAlbum(albumId: string) {
-        const index = this.findAlbum(albumId)[1];
-        removeAlbumId(albumId);
-        this.Albums.splice(index, 1);
+    async deleteAlbum(albumId: string) {
+        const album = await this.findAlbum(albumId);
+        //remove album id from tracks
+        this.prisma.album.delete({
+          where: {
+            id: albumId
+          }
+        })
+        // removeAlbumId(albumId);
     }
   
-    private findAlbum(id: string): [AlbumInstance, number] {
-      const AlbumIndex = this.Albums.findIndex(album => album.id === id);
-      const Album = this.Albums[AlbumIndex];
-      if (!Album) {
+    private async findAlbum(id: string): Promise<AlbumInstance> {
+     const album = await this.prisma.album.findUnique({
+        where:{
+          id:id
+        }
+      })
+      if (!album) {
         throw new NotFoundException('Could not find Album.');
       }
-      return [Album, AlbumIndex];
+      return album;
     }
 }
