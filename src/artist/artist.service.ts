@@ -4,12 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { getArtists } from 'src/database/db';
 import { removeArtistId } from 'src/utils/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class ArtistService {
     private Artists: ArtistInstance[] = getArtists();
 
-    constructor(private prisma: PrismaService){}
+    constructor(private prisma: PrismaService, private utils: UtilsService){}
     
     async insertArtist(name: string, grammy: boolean): Promise<ArtistInstance> {
       const newArtist = this.prisma.artist.create({
@@ -48,12 +49,14 @@ export class ArtistService {
   
     async deleteArtist(artistId: string) {
         const artist = await this.findArtist(artistId);
-        this.prisma.artist.delete({
+        await this.utils.removeArtistIdFromAlbum(artistId);
+        await this.utils.removeArtistIdFromTrack(artistId);
+      await this.prisma.artist.delete({
           where: {
             id: artistId
           }
         })
-        removeArtistId(artistId);
+        // removeArtistId(artistId);
     }
   
     private async findArtist(id: string): Promise<ArtistInstance> {
