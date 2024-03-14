@@ -1,7 +1,6 @@
 import { ForbiddenException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserInstance } from './user.models';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 @Injectable()

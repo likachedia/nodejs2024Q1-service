@@ -1,0 +1,66 @@
+version: '3.8'
+services:
+  db:
+    container_name: postgres
+    image: home-library:db
+    restart: always
+    ports:
+      - ${PGPORT}:${PGPORT}
+    build:
+      context: ./prisma
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_DB: ${PGDATABASE}
+      # POSTGRES_HOST: ${PGHOST}
+      # POSTGRES_PORT: ${PGPORT}
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data
+    networks:
+      - ${NETWORK}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - db-logs:/var/log/postgresql
+    env_file:
+      - .env
+
+  api:
+    container_name: api
+    image: home-library-service:1.0
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '${PORT}:${PORT}'
+    depends_on:
+      - db
+    volumes:
+      - api-data:/src:/app/src
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      # PORT: ${PORT}
+      PGHOST: ${PGDATABASE}
+      PGPORT: ${PGPORT}
+      PGDATABASE: ${PGDATABASE}
+      PGUSER: ${PGUSER}
+      PGPASSWORD: ${PGPASSWORD}
+    networks:
+      - ${NETWORK}
+    
+networks:
+  home-library-network:
+    name: ${NETWORK}
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: '192.168.0.0/24'
+          gateway: '192.168.0.1'
+
+
+volumes:
+  db-data:
+  db-logs:
+  api-data:

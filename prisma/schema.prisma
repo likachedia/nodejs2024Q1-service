@@ -27,6 +27,7 @@ model Artist {
   grammy Boolean
   albums Album[]
   track Track []
+  favorites ArtistInFavorites[]
   @@map("artists")
 }
 
@@ -35,17 +36,51 @@ model Album {
   name String
   year Int
   artistId String?
-  artist Artist? @relation(fields: [artistId], references: [id])
+  artist Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
   tracks Track[]
+  favorites AlbumInFavorites[]
 }
 
 model Track {
   id String @id
   name String
-  year Int
   artistId String?
-  artist Artist? @relation(fields: [artistId], references: [id])
+  artist Artist? @relation(fields: [artistId], references: [id], onDelete: SetNull)
   albumId String?
-  album Album? @relation(fields: [albumId], references: [id])
+  album Album? @relation(fields: [albumId], references: [id], onDelete: SetNull)
   duration Int
+  favorites TrackInFavorites[]
+}
+
+model ArtistInFavorites {
+  artistId String
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  favorites Favorites @relation(fields: [favoritesId], references: [id], onDelete: Cascade)
+  favoritesId String
+
+  @@id([artistId, favoritesId])
+}
+
+model AlbumInFavorites {
+  albumId String @unique
+  album Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  favorites Favorites @relation(fields: [favoritesId], references: [id], onDelete: Cascade)
+  favoritesId String
+
+  @@id([albumId, favoritesId])
+}
+
+model TrackInFavorites {
+  trackId String @unique
+  track Track @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  favorites Favorites @relation(fields: [favoritesId], references: [id], onDelete: Cascade)
+  favoritesId String
+
+  @@id([trackId, favoritesId])
+}
+model Favorites {
+  id String @unique
+  artists ArtistInFavorites[]
+  albums AlbumInFavorites[]
+  tracks TrackInFavorites[]
 }

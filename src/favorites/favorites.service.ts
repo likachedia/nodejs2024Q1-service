@@ -2,13 +2,17 @@ import { HttpException, Injectable, NotFoundException } from "@nestjs/common";
 import { Album } from "src/album/album.models";
 import { Artist } from "src/artist/artist.models";
 import { getAlbums, getArtists, getFavorites, getTracks } from "src/database/db";
+import { PrismaService } from "src/prisma/prisma.service";
 import { Track } from "src/track/track.model";
 import { getItemById, validateItemExists } from "src/utils/utils";
+import { UtilsService } from "src/utils/utils.service";
 
 @Injectable()
 export class FavoritesService {
 
     private favorites = getFavorites();
+
+    constructor(private prisma: PrismaService, private utils: UtilsService){}
 
     getAllFavorites() {
         const favAlbums = this.favorites.albums.map(item => {
