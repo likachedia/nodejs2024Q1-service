@@ -15,11 +15,11 @@ export class UtilsService {
 
     }
     async removeArtistIdFromAlbum(artistId: string){
-        const artist = await this.prisma.artist.findFirstOrThrow({
-            where: {
-                id: artistId
-            }
-        })
+        // const artist = await this.prisma.artist.findFirstOrThrow({
+        //     where: {
+        //         id: artistId
+        //     }
+        // })
         const albums = await this.prisma.album.findMany({
             where: {
                 artistId: artistId
@@ -41,11 +41,11 @@ export class UtilsService {
     }
 
     async removeArtistIdFromTrack(artistId: string){
-        const artist = await this.prisma.artist.findFirstOrThrow({
-            where: {
-                id: artistId
-            }
-        })
+        // const artist = await this.prisma.artist.findFirstOrThrow({
+        //     where: {
+        //         id: artistId
+        //     }
+        // })
         const tracks = await this.prisma.track.findMany({
             where: {
                 artistId: artistId
@@ -69,7 +69,7 @@ export class UtilsService {
     async removeAlbumIdFromTrack(albumId: string){
         const tracks = await this.prisma.track.findMany({
             where: {
-                artistId: albumId
+                albumId: albumId
             }
         })
 
@@ -86,4 +86,21 @@ export class UtilsService {
             })
         })
     }
+
+    // async removeATrackFromAlbum(trackId: string){
+    //     const albums = await this.prisma.album.findMany({})
+
+    //     albums.forEach(album => {
+    //         this.prisma.album.update({
+    //             where: {
+    //                 id: album.id
+    //             },
+    //             data: {
+    //                 tracks: {
+    //                     disconnect: true
+    //                 }
+    //             }
+    //         })
+    //     })
+    // }
 }

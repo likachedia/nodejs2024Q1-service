@@ -3,8 +3,8 @@ export interface User {
     login: string;
     password: string;
     version: number; // integer number, increments on update
-    createdAt: Date; // timestamp of creation
-    updatedAt: Date; // timestamp of last update
+    createdAt: number; // timestamp of creation
+    updatedAt: number; // timestamp of last update
 }
 
 export class UserInstance implements User{
@@ -13,7 +13,7 @@ export class UserInstance implements User{
        public login: string,
        public password: string,
        public version: number,
-       public createdAt: Date,
-       public updatedAt: Date,
+       public createdAt: number,
+       public updatedAt: number,
     ){}
 }

@@ -1,6 +1,6 @@
-import { ForbiddenException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserInstance } from './user.models';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 @Injectable()
@@ -8,21 +8,27 @@ export class UserService {
     private Users: UserInstance[] = [];
 
     constructor( private prisma: PrismaService){}
+    // : Promise<Omit<UserInstance, "password">>
+    async insertUser(login: string, userPassword: string) {
+      if (!(login && userPassword))
+      throw new BadRequestException('invalid credentials');
 
-    async insertUser(login: string, userPassword: string): Promise<Omit<UserInstance, "password">> {
       try{
         const userId = uuidv4();
-        // const newUser = new UserInstance(userId, login, userPassword, 1, Date.parse(new Date().toISOString()), Date.parse(new Date().toISOString()));
-        const user = await this.prisma.user.create({
-          data: {
-            id: userId,
-            login: login,
-            password: userPassword,
-            version: 1
-          }
+        const userData = {
+          id: userId,
+          login: login,
+          password: userPassword,
+          version: 1,
+          updatedAt: Number(Date.now()),
+          createdAt: Number(Date.now()),
+        }
+        await this.prisma.user.create({
+          data: userData
         })
-        delete user.password;
-        return user;
+        delete userData.password;
+        console.log(userData);
+        return userData;
       } catch(error){
         if(error instanceof PrismaClientKnownRequestError){
           if(error.code === 'P20020'){
@@ -30,37 +36,32 @@ export class UserService {
           }
         }
       }
-
-      // this.Users.push(newUser);
-      // const {password, ...res} = newUser;
-      // return res;
     }
   
     async getUsers() {
       const users = await this.prisma.user.findMany();
       return users;
-      // return [...this.Users];
     }
   
     async getSingleUser(userId: string): Promise<Omit<UserInstance, "password">> {
+      if (!validate(userId)) throw new BadRequestException('invalid id'); 
       const user = await this.findUser(userId);
       delete user.password;
-      // const {password, ...res} = user;
-      // return { ...res };
       return {...user};
     }
   
    async updateUser(userId: string, oldPassword: string, newPassword: string) {
+    // if (!validate(userId)) throw new BadRequestException('invalid id');  
       const user = await this.findUser(userId);
 
-      if(!user) {
-        throw new ForbiddenException("Credentials incorrect");
-      }
+      // if(!user) {
+      //   throw new ForbiddenException("Credentials incorrect");
+      // }
 
       if (oldPassword !== user.password) {
         throw new HttpException('Password is incorrect', 403)
       }
-      this.prisma.user.update({
+      await this.prisma.user.update({
         where: {
           id: userId
         },
@@ -70,21 +71,21 @@ export class UserService {
       })
       delete user.password;
       return user;
-      // const [User, index] = this.findUser(UserId);
-      // if (oldPassword !== User.password) {
-      //   throw new HttpException('Password is incorrect', 403)
-      // }
-      // const updatedUser = { ...User, version: User.version + 1, updatedAt: Date.parse(new Date().toISOString())};
-      //   updatedUser.password = newPassword;
-      // this.Users[index] = updatedUser;
-      // const {password, ...res} = updatedUser;
-      // return { ...res };
     }
   
     async deleteUser(userId: string) {
-        const user = await this.findUser(userId);
-        // this.Users.splice(index, 1);
-        this.prisma.user.delete({
+      if (!validate(userId)) throw new BadRequestException('invalid id');
+      console.log(userId)
+      //   const user = await this.prisma.user.findUnique({
+      //     where: {
+      //       id: userId
+      //     }
+      //   })
+      //   if (!user) {
+      //     throw new NotFoundException('Could not find user.');
+      //   }
+        await this.findUser(userId);
+        await this.prisma.user.delete({
           where: {
             id: userId
           }
@@ -100,6 +101,19 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('Could not find user.');
       }
+      console.log(user);
       return user;
+
+        //       const userId = uuidv4();
+        // const userData = {
+        //   id: userId,
+        //   login: 'lsrger',
+        //   password: "userPassword",
+        //   version: 1,
+        //   updatedAt: Number(Date.now()),
+        //   createdAt: Number(Date.now()),
+        // }
+
+        // return userData;
     }
 }

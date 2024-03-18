@@ -38,9 +38,9 @@ export class TrackService {
     }
   
     async updateTrack(TrackId: string, name: string, artistId: string | null, albumId: string | null, duration: number,): Promise<TrackInstance> {
-      const track = await this.findTrack(TrackId);
+      await this.findTrack(TrackId);
       //check if artist and album exists
-      const updatedTrack = this.prisma.track.update({
+      const updatedTrack = await this.prisma.track.update({
         where: {
           id: TrackId
         },
@@ -55,8 +55,12 @@ export class TrackService {
     }
   
     async deleteTrack(TrackId: string) {
-        const track = await this.findTrack(TrackId);
-        // this.Tracks.splice(index, 1);
+        await this.findTrack(TrackId);
+        await this.prisma.track.delete({
+          where: {
+            id: TrackId
+          }
+        })
     }
   
     private async findTrack(id: string) {

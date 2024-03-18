@@ -2,18 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ArtistInstance } from './artist.models';
 import { v4 as uuidv4 } from 'uuid';
 import { getArtists } from 'src/database/db';
-import { removeArtistId } from 'src/utils/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class ArtistService {
-    private Artists: ArtistInstance[] = getArtists();
+    // private Artists: ArtistInstance[] = getArtists();
 
     constructor(private prisma: PrismaService, private utils: UtilsService){}
     
     async insertArtist(name: string, grammy: boolean): Promise<ArtistInstance> {
-      const newArtist = this.prisma.artist.create({
+      const newArtist = await this.prisma.artist.create({
         data: {
           id: uuidv4(),
           name: name,
@@ -34,7 +33,7 @@ export class ArtistService {
     }
   
     async updateArtist(artistId: string, name: string, grammy: boolean): Promise<ArtistInstance> {
-      const artist = this.findArtist(artistId);
+      await this.findArtist(artistId);
       const updatedArtist = await this.prisma.artist.update({
         where: {
           id: artistId
@@ -48,10 +47,10 @@ export class ArtistService {
     }
   
     async deleteArtist(artistId: string) {
-        const artist = await this.findArtist(artistId);
+        await this.findArtist(artistId);
         await this.utils.removeArtistIdFromAlbum(artistId);
         await this.utils.removeArtistIdFromTrack(artistId);
-      await this.prisma.artist.delete({
+        await this.prisma.artist.delete({
           where: {
             id: artistId
           }
@@ -62,7 +61,7 @@ export class ArtistService {
     private async findArtist(id: string): Promise<ArtistInstance> {
       const artist = await this.prisma.artist.findUnique({
         where: {
-          id: id
+          id:id
         }
       });
       if (!artist) {

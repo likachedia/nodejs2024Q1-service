@@ -37,14 +37,17 @@ export class UserController {
     @Body()
     updatePassword: UpdatePasswordDto
   ) {
-    const updatedUser = this.userService.updateUser(userId, updatePassword.oldPassword, updatePassword.newPassword);
-    return updatedUser;
+    console.log(updatePassword);
+    return this.userService.updateUser(userId, updatePassword.oldPassword, updatePassword.newPassword);
+    // return updatedUser;
   }
 
   @Delete(':id')
   @HttpCode(204)
   removeUser(@Param('id', ParseUUIDPipe) userId: string) {
-      this.userService.deleteUser(userId);
-      return null;
+    console.log(userId);
+    const response = this.userService.deleteUser(userId);
+    console.log(response);
+    return response;
   }
 }
