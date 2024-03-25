@@ -56,20 +56,12 @@ model ArtistInFavorites {
   id       String @id @default(uuid())
   artist   Artist @relation(fields: [artistId], references: [id], onDelete: Cascade)
   artistId String @unique
-  // favorites Favorites @relation(fields: [favoritesId], references: [id], onDelete: Cascade)
-  // favoritesId String
-
-  // @@id([artistId])
 }
 
 model AlbumInFavorites {
   id      String @id @default(uuid())
   album   Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
   albumId String @unique
-  // favorites Favorites @relation(fields: [favoritesId], references: [id], onDelete: Cascade)
-  // favoritesId String
-
-  // @@id([albumId, favoritesId])
 }
 
 model TrackInFavorites {
@@ -77,9 +69,3 @@ model TrackInFavorites {
   track   Track  @relation(fields: [trackId], references: [id], onDelete: Cascade)
   trackId String @unique
 }
-// model Favorites {
-//   id String @unique
-//   artists ArtistInFavorites[]
-//   albums AlbumInFavorites[]
-//   tracks TrackInFavorites[]
-// }

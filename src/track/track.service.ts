@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { TrackInstance } from './track.model';
 import { getTracks } from 'src/database/db';
@@ -12,9 +12,9 @@ export class TrackService {
     constructor(private prisma: PrismaService, private utils: UtilsService){}
     
     async insertTrack(name: string, artistId: string | null, albumId: string | null, duration: number,): Promise<TrackInstance> {
-      // const TrackId = uuidv4();
-      // const newTrack = new TrackInstance(TrackId, name, artistId, albumId, duration);
-      // this.Tracks.push(newTrack);
+      if (!(name && duration)) {
+        throw new BadRequestException('missing required fields');
+      }
       const track = await this.prisma.track.create({
         data: {
           id: uuidv4(),
@@ -38,6 +38,9 @@ export class TrackService {
     }
   
     async updateTrack(TrackId: string, name: string, artistId: string | null, albumId: string | null, duration: number,): Promise<TrackInstance> {
+      if (!(name && duration)) {
+        throw new BadRequestException('missing required fields');
+      }
       await this.findTrack(TrackId);
       //check if artist and album exists
       const updatedTrack = await this.prisma.track.update({

@@ -5,13 +5,11 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install --force
+RUN npm install --force --dev
  
 COPY . .
   
 RUN npm run build
  
 EXPOSE 6000
-HEALTHCHECK --interval=15s --timeout=3s --start-period=15s CMD curl -f 
 CMD [  "npm", "run", "start:migrate" ]
-

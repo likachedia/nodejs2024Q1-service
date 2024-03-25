@@ -2,7 +2,7 @@ version: '3.8'
 services:
   db:
     container_name: db
-    image: home-library:db
+    image: lch/home-library:db
     restart: always
     ports:
       - ${PGPORT}:${PGPORT}
@@ -13,8 +13,6 @@ services:
       POSTGRES_PASSWORD: ${PGPASSWORD}
       POSTGRES_USER: ${PGUSER}
       POSTGRES_DB: ${PGDATABASE}
-      # POSTGRES_HOST: ${PGHOST}
-      # POSTGRES_PORT: ${PGPORT}
       POSTGRES_HOST_AUTH_METHOD: trust
       PGDATA: /var/lib/postgresql/data
     networks:
@@ -27,7 +25,7 @@ services:
 
   api:
     container_name: api
-    image: home-library-service:1.0
+    image: lch/home-library-service:1.0
     restart: always
     build:
       context: .
@@ -40,7 +38,6 @@ services:
       - api-data:/src:/app/src
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      # PORT: ${PORT}
       PGHOST: ${PGDATABASE}
       PGPORT: ${PGPORT}
       PGDATABASE: ${PGDATABASE}
@@ -54,7 +51,6 @@ networks:
     name: ${NETWORK}
     driver: bridge
     ipam:
-      driver: default
       config:
         - subnet: '192.168.0.0/24'
           gateway: '192.168.0.1'

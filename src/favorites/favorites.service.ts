@@ -12,7 +12,7 @@ import { UtilsService } from "src/utils/utils.service";
 @Injectable()
 export class FavoritesService {
 
-    private favorites = getFavorites();
+    // private favorites = getFavorites();
 
     constructor(private prisma: PrismaService, private utils: UtilsService){}
 
@@ -30,24 +30,6 @@ export class FavoritesService {
           };
       
           return response;
-
-        // const favAlbums = this.favorites.albums.map(item => {
-        //    return getItemById(item, getAlbums()) as Album;
-        // }).filter(value => !!value);
-
-        // const favTracks = this.favorites.tracks.map(item => {
-        //     return getItemById(item, getTracks()) as Track;
-        // }).filter(value => !!value);
-
-        // const favArtist = this.favorites.artists.map(item => {
-        //     return getItemById(item, getArtists()) as Artist;
-        // }).filter(value => !!value);
-
-        // return {
-        //     artists: favArtist,
-        //     albums: favAlbums,
-        //     tracks: favTracks
-        // }
     }
 
     async addTrackToFavorites(id: string) {
@@ -188,7 +170,7 @@ export class FavoritesService {
         // }    
     }
 
-    findFavIndex(id: string, items: string[]): number {
-       return items.findIndex(item => item === id);
-    }
+    // findFavIndex(id: string, items: string[]): number {
+    //    return items.findIndex(item => item === id);
+    // }
 }

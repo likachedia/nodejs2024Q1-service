@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { AlbumInstance } from './album.models';
 import { getAlbums } from 'src/database/db';
@@ -6,6 +6,7 @@ import { removeAlbumId } from 'src/utils/utils';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UtilsService } from 'src/utils/utils.service';
 import { ArtistInstance } from 'src/artist/artist.models';
+import { UpdateAlbumDto } from './dto/album.dto';
 
 @Injectable()
 export class AlbumService {
@@ -14,7 +15,10 @@ export class AlbumService {
     constructor(private prisma: PrismaService, private utils: UtilsService){}
 
     async insertAlbum(name: string, year: number, artistId: string | null): Promise<AlbumInstance> {
-     let artist: ArtistInstance;
+      if (!(name && year)) {
+        throw new BadRequestException('missing required fields');
+      }
+      let artist: ArtistInstance;
     if(artistId){
       artist = await this.prisma.artist.findUnique({
         where: {
@@ -45,16 +49,23 @@ export class AlbumService {
       return { ...album };
     }
   
-    async updateAlbum(albumId: string, name: string, year: number, artistId: string | null): Promise<AlbumInstance> {
-      const album = await this.findAlbum(albumId);
+    async updateAlbum(albumId: string, updateAlbum: UpdateAlbumDto): Promise<AlbumInstance> {
+      if ((!updateAlbum?.name && !updateAlbum?.year && !updateAlbum?.artistId) ||
+      (updateAlbum?.name && typeof updateAlbum?.name !== 'string') ||
+      (updateAlbum?.year && typeof updateAlbum?.year !== 'number') ||
+      (updateAlbum?.artistId && typeof updateAlbum?.artistId !== 'string')) {
+        throw new BadRequestException('missing required fields');
+      }
+
+      await this.findAlbum(albumId);
       const updatedAlbum = await this.prisma.album.update({
         where: {
           id: albumId
         },
         data: {
-          name: name,
-          year: year,
-          artistId: artistId
+          name: updateAlbum.name,
+          year: updateAlbum.year,
+          artistId: updateAlbum.artistId
         }
       })
       return updatedAlbum;

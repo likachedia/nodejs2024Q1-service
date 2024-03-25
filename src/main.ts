@@ -14,13 +14,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
   }))
-
   const path = join(dirname(__dirname), "doc", "api.yaml");
   const api = load(
    await readFile(path, 'utf8'),
   ) as OpenAPIObject;
-
-  SwaggerModule.setup('doc', app, api);
-  await app.listen(6000,()  => console.log(`Listening on port:  6000`));
+  app.enableCors();
+  const document = SwaggerModule.createDocument(app, api);
+  SwaggerModule.setup('doc', app, document);
+  await app.listen(port,'0.0.0.0',()  => console.log(`Listening on port:  6000`));
 }
 bootstrap();

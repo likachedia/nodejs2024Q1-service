@@ -52,12 +52,22 @@ export class UserService {
   
    async updateUser(userId: string, oldPassword: string, newPassword: string) {
     // if (!validate(userId)) throw new BadRequestException('invalid id');  
+    if (!(oldPassword && newPassword) || 
+    (oldPassword && typeof oldPassword !== 'string')
+    || (newPassword && typeof newPassword !== 'string')) {
+      throw new BadRequestException('missing required fields');
+    }
       const user = await this.findUser(userId);
 
       // if(!user) {
       //   throw new ForbiddenException("Credentials incorrect");
       // }
-
+      const newData = {
+        version: user.version++,
+        createdAt: user.createdAt,
+        updatedAt: Number(Date.now()),
+        password: newPassword
+      }
       if (oldPassword !== user.password) {
         throw new HttpException('Password is incorrect', 403)
       }
@@ -66,16 +76,19 @@ export class UserService {
           id: userId
         },
         data: {
-          password: newPassword
+          ...newData
         }
       })
-      delete user.password;
-      return user;
+      // delete user.password;
+      return {
+        ...newData,
+        userId,
+        login: user.login,
+      };
     }
   
     async deleteUser(userId: string) {
-      if (!validate(userId)) throw new BadRequestException('invalid id');
-      console.log(userId)
+      // if (!validate(userId)) throw new BadRequestException('invalid id');
       //   const user = await this.prisma.user.findUnique({
       //     where: {
       //       id: userId
@@ -103,17 +116,5 @@ export class UserService {
       }
       console.log(user);
       return user;
-
-        //       const userId = uuidv4();
-        // const userData = {
-        //   id: userId,
-        //   login: 'lsrger',
-        //   password: "userPassword",
-        //   version: 1,
-        //   updatedAt: Number(Date.now()),
-        //   createdAt: Number(Date.now()),
-        // }
-
-        // return userData;
     }
 }

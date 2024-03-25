@@ -10,7 +10,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
-import { CreateTrackDto } from './dto/track.dto';
+import { CreateTrackDto, UpdateTrackDto } from './dto/track.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('track')
@@ -43,7 +43,7 @@ export class TrackController {
   updateTrack(
     @Param('id', ParseUUIDPipe) TrackId: string,
     @Body()
-    updateTrack: CreateTrackDto,
+    updateTrack: UpdateTrackDto,
   ) {
     return this.trackService.updateTrack(
       TrackId,

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from "@nestjs/common";
-import { CreateAlbumDto } from "./dto/album.dto";
+import { CreateAlbumDto, UpdateAlbumDto } from "./dto/album.dto";
 import { AlbumService } from "./album.service";
 
 @Controller('album')
@@ -32,9 +32,9 @@ export class AlbumController {
   updateAlbum(
     @Param('id', ParseUUIDPipe) AlbumId: string,
     @Body()
-    updateAlbum: CreateAlbumDto
+    updateAlbum: UpdateAlbumDto
   ) {
-    return this.albumService.updateAlbum(AlbumId, updateAlbum.name, updateAlbum.year, updateAlbum.artistId);
+    return this.albumService.updateAlbum(AlbumId, updateAlbum);
   }
 
   @Delete(':id')
