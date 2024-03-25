@@ -8,7 +8,7 @@
 ## Downloading
 
 ```
-git clone {repository URL}
+git clone {https://github.com/likachedia/nodejs2024Q1-service}
 ```
 
 ## Installing NPM modules
@@ -40,7 +40,14 @@ npm run prisma:migrate
 
 npm run prisma:deploy
 ``` 
+### Vulnerabilities scan
 
+After you have built the images 
+you can scan them for vulnerabiities and recommendations using Docker Scout. Run
+
+```
+npm run docker:scan
+```
 ## Testing
 
 After application running open new terminal and enter:

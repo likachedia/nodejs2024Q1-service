@@ -89,14 +89,6 @@ export class UserService {
   
     async deleteUser(userId: string) {
       // if (!validate(userId)) throw new BadRequestException('invalid id');
-      //   const user = await this.prisma.user.findUnique({
-      //     where: {
-      //       id: userId
-      //     }
-      //   })
-      //   if (!user) {
-      //     throw new NotFoundException('Could not find user.');
-      //   }
         await this.findUser(userId);
         await this.prisma.user.delete({
           where: {
@@ -114,7 +106,7 @@ export class UserService {
       if (!user) {
         throw new NotFoundException('Could not find user.');
       }
-      console.log(user);
+      console.log(user, 'find');
       return user;
     }
 }

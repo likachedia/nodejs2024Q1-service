@@ -44,12 +44,8 @@ export class UserController {
   @HttpCode(204)
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
-    description: 'user successfully deleted',
   })
-  async removeUser(@Param('id', ParseUUIDPipe) userId: string) {
-    console.log(userId);
-    const response = await this.userService.deleteUser(userId);
-    console.log(response);
-    return response;
+  removeUser(@Param('id', ParseUUIDPipe) userId: string) {
+    return this.userService.deleteUser(userId);
   }
 }
