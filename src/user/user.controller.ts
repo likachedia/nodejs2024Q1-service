@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, Put } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto, UpdatePasswordDto } from "./dto/create-user.dto";
-import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags, ApiUnprocessableEntityResponse } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiResponse, ApiTags, ApiUnprocessableEntityResponse } from "@nestjs/swagger";
 
 @ApiTags('user')
 @Controller('user')
@@ -10,10 +10,10 @@ export class UserController {
 
   
   @Post()
-  addUser(
+ async addUser(
     @Body() user: CreateUserDto
   ) {
-    const newUser = this.userService.insertUser(
+    const newUser = await this.userService.insertUser(
         user.login,
         user.password,
     );
@@ -37,14 +37,15 @@ export class UserController {
     @Body()
     updatePassword: UpdatePasswordDto
   ) {
-    const updatedUser = this.userService.updateUser(userId, updatePassword.oldPassword, updatePassword.newPassword);
-    return updatedUser;
+    return this.userService.updateUser(userId, updatePassword.oldPassword, updatePassword.newPassword);
   }
 
   @Delete(':id')
   @HttpCode(204)
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+  })
   removeUser(@Param('id', ParseUUIDPipe) userId: string) {
-      this.userService.deleteUser(userId);
-      return null;
+    return this.userService.deleteUser(userId);
   }
 }

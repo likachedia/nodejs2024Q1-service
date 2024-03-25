@@ -1,48 +1,97 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { AlbumInstance } from './album.models';
 import { getAlbums } from 'src/database/db';
 import { removeAlbumId } from 'src/utils/utils';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UtilsService } from 'src/utils/utils.service';
+import { ArtistInstance } from 'src/artist/artist.models';
+import { UpdateAlbumDto } from './dto/album.dto';
 
 @Injectable()
 export class AlbumService {
     private Albums: AlbumInstance[] = getAlbums();
 
-    insertAlbum(name: string, year: number, artistId: string | null): AlbumInstance {
-      const AlbumId = uuidv4();
-      const newAlbum = new AlbumInstance(AlbumId, name, year, artistId);
-      this.Albums.push(newAlbum);
-      return newAlbum;
+    constructor(private prisma: PrismaService, private utils: UtilsService){}
+
+    async insertAlbum(name: string, year: number, artistId: string | null): Promise<AlbumInstance> {
+      if (!(name && year)) {
+        throw new BadRequestException('missing required fields');
+      }
+      let artist: ArtistInstance;
+    if(artistId){
+      artist = await this.prisma.artist.findUnique({
+        where: {
+          id: artistId
+        }
+      })
+     }
+    
+     const album = await this.prisma.album.create({
+        data: {
+          id:  uuidv4(),
+          name: name,
+          year: year,
+          artistId: artist?.id ?? null
+        }
+      })
+
+      return album;
     }
   
-    getAlbums() {
-      return [...this.Albums];
+    async getAlbums(): Promise<AlbumInstance[]> {
+      const albums = await this.prisma.album.findMany();
+      return albums;
     }
   
-    getSingleAlbum(AlbumId: string): AlbumInstance {
-      const Album = this.findAlbum(AlbumId)[0];
-      return { ...Album };
+    async getSingleAlbum(AlbumId: string): Promise<AlbumInstance> {
+      const album = await this.findAlbum(AlbumId);
+      return { ...album };
     }
   
-    updateAlbum(AlbumId: string, name: string, year: number, artistId: string | null): AlbumInstance {
-      const [Album, index] = this.findAlbum(AlbumId);
-      const updatedAlbum = { ...Album, name, year, artistId};
-      this.Albums[index] = updatedAlbum;
+    async updateAlbum(albumId: string, updateAlbum: UpdateAlbumDto): Promise<AlbumInstance> {
+      if ((!updateAlbum?.name && !updateAlbum?.year && !updateAlbum?.artistId) ||
+      (updateAlbum?.name && typeof updateAlbum?.name !== 'string') ||
+      (updateAlbum?.year && typeof updateAlbum?.year !== 'number') ||
+      (updateAlbum?.artistId && typeof updateAlbum?.artistId !== 'string')) {
+        throw new BadRequestException('missing required fields');
+      }
+
+      await this.findAlbum(albumId);
+      const updatedAlbum = await this.prisma.album.update({
+        where: {
+          id: albumId
+        },
+        data: {
+          name: updateAlbum.name,
+          year: updateAlbum.year,
+          artistId: updateAlbum.artistId
+        }
+      })
       return updatedAlbum;
     }
   
-    deleteAlbum(albumId: string) {
-        const index = this.findAlbum(albumId)[1];
-        removeAlbumId(albumId);
-        this.Albums.splice(index, 1);
+    async deleteAlbum(albumId: string) {
+        const album = await this.findAlbum(albumId);
+        //remove album id from tracks
+        album ?? await this.utils.removeAlbumIdFromTrack(albumId);
+
+       await this.prisma.album.delete({
+          where: {
+            id: albumId
+          }
+        })
     }
   
-    private findAlbum(id: string): [AlbumInstance, number] {
-      const AlbumIndex = this.Albums.findIndex(album => album.id === id);
-      const Album = this.Albums[AlbumIndex];
-      if (!Album) {
+    private async findAlbum(id: string): Promise<AlbumInstance> {
+     const album = await this.prisma.album.findUnique({
+        where:{
+          id:id
+        }
+      })
+      if (!album) {
         throw new NotFoundException('Could not find Album.');
       }
-      return [Album, AlbumIndex];
+      return album;
     }
 }

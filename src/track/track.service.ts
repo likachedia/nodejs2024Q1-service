@@ -1,46 +1,80 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { TrackInstance } from './track.model';
 import { getTracks } from 'src/database/db';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UtilsService } from 'src/utils/utils.service';
 
 @Injectable()
 export class TrackService {
     private Tracks: TrackInstance[] = getTracks();
 
-    insertTrack(name: string, artistId: string | null, albumId: string | null, duration: number,): TrackInstance {
-      const TrackId = uuidv4();
-      const newTrack = new TrackInstance(TrackId, name, artistId, albumId, duration);
-      this.Tracks.push(newTrack);
-      return newTrack;
+    constructor(private prisma: PrismaService, private utils: UtilsService){}
+    
+    async insertTrack(name: string, artistId: string | null, albumId: string | null, duration: number,): Promise<TrackInstance> {
+      if (!(name && duration)) {
+        throw new BadRequestException('missing required fields');
+      }
+      const track = await this.prisma.track.create({
+        data: {
+          id: uuidv4(),
+          name: name,
+          artistId: artistId,
+          albumId: albumId,
+          duration: duration,
+        }
+      })
+      return track;
     }
   
-    getTracks() {
-      return [...this.Tracks];
+   async getTracks() {
+      const tracks = await this.prisma.track.findMany();
+      return [...tracks];
     }
   
-    getSingleTrack(TrackId: string): TrackInstance {
-      const Track = this.findTrack(TrackId)[0];
-      return { ...Track };
+    async getSingleTrack(TrackId: string): Promise<TrackInstance> {
+      const track = await this.findTrack(TrackId);
+      return { ...track };
     }
   
-    updateTrack(TrackId: string, name: string, artistId: string | null, albumId: string | null, duration: number,): TrackInstance {
-      const [Track, index] = this.findTrack(TrackId);
-      const updatedTrack = { ...Track, name, artistId, albumId, duration};
-      this.Tracks[index] = updatedTrack;
+    async updateTrack(TrackId: string, name: string, artistId: string | null, albumId: string | null, duration: number,): Promise<TrackInstance> {
+      if (!(name && duration)) {
+        throw new BadRequestException('missing required fields');
+      }
+      await this.findTrack(TrackId);
+      //check if artist and album exists
+      const updatedTrack = await this.prisma.track.update({
+        where: {
+          id: TrackId
+        },
+        data: {
+          name: name,
+          artistId: artistId,
+          albumId: albumId,
+          duration: duration
+        }
+      });
       return updatedTrack;
     }
   
-    deleteTrack(TrackId: string) {
-        const index = this.findTrack(TrackId)[1];
-        this.Tracks.splice(index, 1);
+    async deleteTrack(TrackId: string) {
+        await this.findTrack(TrackId);
+        await this.prisma.track.delete({
+          where: {
+            id: TrackId
+          }
+        })
     }
   
-    private findTrack(id: string): [TrackInstance, number] {
-      const TrackIndex = this.Tracks.findIndex(Track => Track.id === id);
-      const Track = this.Tracks[TrackIndex];
-      if (!Track) {
+    private async findTrack(id: string) {
+      const track = await this.prisma.track.findUnique({
+        where: {
+          id: id
+        }
+      })
+      if (!track) {
         throw new NotFoundException('Could not find Track.');
       }
-      return [Track, TrackIndex];
+      return track;
     }
 }

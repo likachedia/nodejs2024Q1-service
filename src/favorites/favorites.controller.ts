@@ -1,29 +1,70 @@
 
-import { Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post } from "@nestjs/common";
+import { Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseUUIDPipe, Post, UnprocessableEntityException } from "@nestjs/common";
 import { FavoritesService } from "./favorites.service";
+import { ApiResponse } from "@nestjs/swagger";
+import { FavoritesResponseDto } from "./dto/favorites.dto";
 
 @Controller('favs')
 export class FavoritesController {
     constructor(private readonly favoritesService: FavoritesService) {}
 
     @Post('/track/:id')
+    @ApiResponse({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      description: 'Track with provided id was not found',
+    })
     addTrack(@Param('id', ParseUUIDPipe) id: string) {
-      return this.favoritesService.addTrackToFavorites(id);
+      const result = this.favoritesService.addTrackToFavorites(id);
+      if (!result) {
+        throw new UnprocessableEntityException(
+          'track with provided id not found',
+        );
+      }
+  
+      return result;
     }
   
     @Post('/album/:id')
+    @ApiResponse({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      description: 'Track with provided id was not found',
+    })
     addAlbum(@Param('id', ParseUUIDPipe) id: string) {
-      return this.favoritesService.addAlbumToFavorites(id);
+      const result = this.favoritesService.addAlbumToFavorites(id);
+      if (!result) {
+        throw new UnprocessableEntityException(
+          'Album with provided id not found',
+        );
+      }
+  
+      return result;
     }
 
     @Post('/artist/:id')
+    @ApiResponse({
+      status: HttpStatus.UNPROCESSABLE_ENTITY,
+      description: 'Artist with provided id was not found',
+    })
     addArtist(@Param('id', ParseUUIDPipe) id: string) {
-      return this.favoritesService.addArtistToFavorites(id);
+      const result = this.favoritesService.addArtistToFavorites(id);
+      console.log(result);
+      if (!result) {
+        throw new UnprocessableEntityException(
+          'artist with provided id not found',
+        );
+      }
+  
+      return result;
     }
 
     @Get()
-    getAllFavorites() {
-      return this.favoritesService.getAllFavorites();
+    @ApiResponse({
+      status: HttpStatus.OK,
+      description: 'Favorites have been successfully retrieved',
+      type: FavoritesResponseDto,
+    })
+    async getAllFavorites() {
+      return await this.favoritesService.getAllFavorites();
     }
 
     @Delete('/track/:id')

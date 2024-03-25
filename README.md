@@ -8,8 +8,9 @@
 ## Downloading
 
 ```
-git clone {repository URL}
+git clone {https://github.com/likachedia/nodejs2024Q1-service}
 ```
+Go to branch develop1
 
 ## Installing NPM modules
 
@@ -28,13 +29,26 @@ npm install --force
 ## Running application
 
 ```
-npm start
+docker compose up
 ```
+After this command may you got problem with running the app.
+Open the second terminal and run this scripts
 
-After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
-For more information about OpenAPI/Swagger please visit https://swagger.io/.
+```
+npm run prisma:generate
 
+npm run prisma:migrate
+
+npm run prisma:deploy
+``` 
+### Vulnerabilities scan
+
+After you have built the images 
+you can scan them for vulnerabiities and recommendations using Docker Scout. Run
+
+```
+npm run docker:scan
+```
 ## Testing
 
 After application running open new terminal and enter:
@@ -51,16 +65,6 @@ To run only one of all test suites
 npm run test -- <path to suite>
 ```
 
-To run all test with authorization
-
-```
-npm run test:auth
-```
-
-To run only specific test suite with authorization
-
-```
-npm run test:auth -- <path to suite>
 ```
 
 ### Auto-fix and format

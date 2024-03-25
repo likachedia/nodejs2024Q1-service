@@ -1,52 +1,112 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserInstance } from './user.models';
-import { v4 as uuidv4 } from 'uuid';
-
+import { v4 as uuidv4, validate } from 'uuid';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 @Injectable()
 export class UserService {
     private Users: UserInstance[] = [];
 
-    insertUser(login: string, userPassword: string): Omit<UserInstance, 'password'> {
-      const userId = uuidv4();
-      const newUser = new UserInstance(userId, login, userPassword, 1, Date.parse(new Date().toISOString()), Date.parse(new Date().toISOString()));
-      this.Users.push(newUser);
-      const {password, ...res} = newUser;
-      return res;
+    constructor( private prisma: PrismaService){}
+    // : Promise<Omit<UserInstance, "password">>
+    async insertUser(login: string, userPassword: string) {
+      if (!(login && userPassword))
+      throw new BadRequestException('invalid credentials');
+
+      try{
+        const userId = uuidv4();
+        const userData = {
+          id: userId,
+          login: login,
+          password: userPassword,
+          version: 1,
+          updatedAt: Number(Date.now()),
+          createdAt: Number(Date.now()),
+        }
+        await this.prisma.user.create({
+          data: userData
+        })
+        delete userData.password;
+        console.log(userData);
+        return userData;
+      } catch(error){
+        if(error instanceof PrismaClientKnownRequestError){
+          if(error.code === 'P20020'){
+            throw new ForbiddenException("Credentials taken");
+          }
+        }
+      }
     }
   
-    getUsers() {
-      return [...this.Users];
+    async getUsers() {
+      const users = await this.prisma.user.findMany();
+      return users;
     }
   
-    getSingleUser(UserId: string): Omit<UserInstance, 'password'> {
-      const user = this.findUser(UserId)[0];
-      const {password, ...res} = user;
-      return { ...res };
+    async getSingleUser(userId: string): Promise<Omit<UserInstance, "password">> {
+      if (!validate(userId)) throw new BadRequestException('invalid id'); 
+      const user = await this.findUser(userId);
+      delete user.password;
+      return {...user};
     }
   
-    updateUser(UserId: string, oldPassword: string, newPassword: string):Omit<UserInstance, 'password'>  {
-      const [User, index] = this.findUser(UserId);
-      if (oldPassword !== User.password) {
+   async updateUser(userId: string, oldPassword: string, newPassword: string) {
+    // if (!validate(userId)) throw new BadRequestException('invalid id');  
+    if (!(oldPassword && newPassword) || 
+    (oldPassword && typeof oldPassword !== 'string')
+    || (newPassword && typeof newPassword !== 'string')) {
+      throw new BadRequestException('missing required fields');
+    }
+      const user = await this.findUser(userId);
+
+      // if(!user) {
+      //   throw new ForbiddenException("Credentials incorrect");
+      // }
+      const newData = {
+        version: user.version++,
+        createdAt: user.createdAt,
+        updatedAt: Number(Date.now()),
+        password: newPassword
+      }
+      if (oldPassword !== user.password) {
         throw new HttpException('Password is incorrect', 403)
       }
-      const updatedUser = { ...User, version: User.version + 1, updatedAt: Date.parse(new Date().toISOString())};
-        updatedUser.password = newPassword;
-      this.Users[index] = updatedUser;
-      const {password, ...res} = updatedUser;
-      return { ...res };
+      await this.prisma.user.update({
+        where: {
+          id: userId
+        },
+        data: {
+          ...newData
+        }
+      })
+      // delete user.password;
+      return {
+        ...newData,
+        userId,
+        login: user.login,
+      };
     }
   
-    deleteUser(userId: string) {
-        const index = this.findUser(userId)[1];
-        this.Users.splice(index, 1);
+    async deleteUser(userId: string) {
+      // if (!validate(userId)) throw new BadRequestException('invalid id');
+        await this.findUser(userId);
+        await this.prisma.user.delete({
+          where: {
+            id: userId
+          }
+        })
     }
   
-    private findUser(id: string): [UserInstance, number] {
-      const UserIndex = this.Users.findIndex(user => user.id === id);
-      const User = this.Users[UserIndex];
-      if (!User) {
+    private async findUser(id: string): Promise<UserInstance>{
+      const user = await this.prisma.user.findUnique({
+        where: {
+          id: id
+        }
+      })
+      if (!user) {
         throw new NotFoundException('Could not find user.');
       }
-      return [User, UserIndex];
+      console.log(user, 'find');
+      return user;
     }
 }

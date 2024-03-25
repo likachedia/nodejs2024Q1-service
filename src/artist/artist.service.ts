@@ -1,48 +1,83 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ArtistInstance } from './artist.models';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
 import { getArtists } from 'src/database/db';
-import { removeArtistId } from 'src/utils/utils';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UtilsService } from 'src/utils/utils.service';
+import { UpdateArtistDto } from './dto/artist.dto';
 
 @Injectable()
 export class ArtistService {
-    private Artists: ArtistInstance[] = getArtists();
+    // private Artists: ArtistInstance[] = getArtists();
 
-    insertArtist(name: string, grammy: boolean): ArtistInstance {
-      const ArtistId = uuidv4();
-      const newArtist = new ArtistInstance(ArtistId, name, grammy);
-      this.Artists.push(newArtist);
+    constructor(private prisma: PrismaService, private utils: UtilsService){}
+    
+    async insertArtist(name: string, grammy: boolean): Promise<ArtistInstance> {
+      if (!(name && grammy)) {
+        throw new BadRequestException('missing required fields');
+      }
+      const newArtist = await this.prisma.artist.create({
+        data: {
+          id: uuidv4(),
+          name: name,
+          grammy: grammy
+        }
+      })      
       return newArtist;
     }
   
-    getArtists() {
-      return [...this.Artists];
+    async getArtists(): Promise<ArtistInstance[]> {
+      const artist = await this.prisma.artist.findMany();
+      return artist;
     }
   
-    getSingleArtist(ArtistId: string): ArtistInstance {
-      const Artist = this.findArtist(ArtistId)[0];
-      return { ...Artist };
+    async getSingleArtist(ArtistId: string): Promise<ArtistInstance> {
+      const artist = await this.findArtist(ArtistId);
+      return { ...artist };
     }
   
-    updateArtist(ArtistId: string, name: string, grammy: boolean): ArtistInstance {
-      const [Artist, index] = this.findArtist(ArtistId);
-      const updatedArtist = { ...Artist, name: name, grammy: grammy};
-      this.Artists[index] = updatedArtist;
+    async updateArtist(artistId: string, updateArtist: UpdateArtistDto): Promise<ArtistInstance> {
+      if (!validate(artistId)) throw new BadRequestException('invalid id');
+      await this.findArtist(artistId);
+      if (
+        (!updateArtist?.name && updateArtist?.grammy) ||
+        (updateArtist?.name && typeof updateArtist?.name !== 'string') ||
+        (updateArtist?.grammy && typeof updateArtist?.grammy !== 'boolean')
+      ) throw new BadRequestException('invalid dto');
+
+      const updatedArtist = await this.prisma.artist.update({
+        where: {
+          id: artistId
+        },
+        data: {
+          name: updateArtist.name,
+          grammy: updateArtist.grammy
+        }
+      })
       return updatedArtist;
     }
   
-    deleteArtist(artistId: string) {
-        const index = this.findArtist(artistId)[1];
-        removeArtistId(artistId);
-        this.Artists.splice(index, 1);        
+    async deleteArtist(artistId: string) {
+        await this.findArtist(artistId);
+        await this.utils.removeArtistIdFromAlbum(artistId);
+        await this.utils.removeArtistIdFromTrack(artistId);
+        await this.prisma.artist.delete({
+          where: {
+            id: artistId
+          }
+        })
+        // removeArtistId(artistId);
     }
   
-    private findArtist(id: string): [ArtistInstance, number] {
-      const ArtistIndex = this.Artists.findIndex(artist => artist.id === id);
-      const Artist = this.Artists[ArtistIndex];
-      if (!Artist) {
+    private async findArtist(id: string): Promise<ArtistInstance> {
+      const artist = await this.prisma.artist.findUnique({
+        where: {
+          id:id
+        }
+      });
+      if (!artist) {
         throw new NotFoundException('Could not find Artist.');
       }
-      return [Artist, ArtistIndex];
+      return artist;
     }
 }
